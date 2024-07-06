@@ -61,5 +61,7 @@ init_grafo["Rome"]["Berlin"] = 2
 init_grafo["Rome"]["Athens"] = 2
 
 grafo = Grafo(nodes, init_grafo)
-nodes_anteriores, menor_caminho = dijkstra_algorithm(grafo=grafo, node_inicial='Reykjavik')
-print_resultado(nodes_anteriores, menor_caminho, node_inicial='Reykjavik', target_node='Belgrade')
+node_inicial = 'Reykjavik'
+target_node = 'Belgrade'
+nodes_anteriores, menor_caminho = dijkstra_algorithm(grafo, node_inicial)
+print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node)
