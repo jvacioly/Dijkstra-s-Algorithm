@@ -64,4 +64,4 @@ grafo = Grafo(nodes, init_grafo)
 node_inicial = 'Reykjavik'
 target_node = 'Belgrade'
 nodes_anteriores, menor_caminho = dijkstra_algorithm(grafo, node_inicial)
-print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node)
+print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node) 
