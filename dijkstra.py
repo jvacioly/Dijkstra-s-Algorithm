@@ -1,6 +1,48 @@
-import sys
+import sys, psycopg2
 from grafo import Grafo
 
+# Construindo o Grafo
+def fetch_data_from_db():
+    # Parâmetros de conexão ao banco de dados
+    db_name = 'postgres'
+    db_user = 'postgres'
+    db_password = '1234'
+    db_host = 'localhost'
+    db_port = '5432' 
+
+    try:
+        connection = psycopg2.connect(
+            dbname=db_name,
+            user=db_user,
+            password=db_password,
+            host=db_host,
+            port=db_port
+        )
+        cursor = connection.cursor()
+        cursor.execute('SELECT vertice1, vertice2, peso FROM grafo')
+        rows = cursor.fetchall()
+        return rows
+    except (Exception, psycopg2.Error) as error:
+        print("Erro ao conectar ao PostgreSQL", error)
+    finally:
+        if connection:
+            cursor.close()
+            connection.close()
+
+def build_grafo_from_db_data(rows):
+    init_grafo = {}
+    nodes = set()
+    for vertice1, vertice2, peso in rows:
+        if vertice1 not in init_grafo:
+            init_grafo[vertice1] = {}
+        if vertice2 not in init_grafo:
+            init_grafo[vertice2] = {}
+        init_grafo[vertice1][vertice2] = peso
+        nodes.update([vertice1, vertice2])
+    nodes = list(nodes)
+    return Grafo(nodes, init_grafo)
+
+# Busca da melhor Rota
 def dijkstra_algorithm(grafo, node_inicial):
     nodes_nao_visitados = list(grafo.get_nodes())
     menor_caminho = {}
@@ -38,13 +80,15 @@ def print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node):
         node = nodes_anteriores[node]
     
     caminho.append(node_inicial)
+    caminho = list(map(str, caminho))
+
 
     print(f'A menor distância para ir de {node_inicial} à {target_node} é: {menor_caminho[target_node]}.')
     print(' -> '.join(reversed(caminho)))
 
 
 # Definir o Grafo e chamar as funções:
-nodes = ["Reykjavik", "Oslo", "Moscow", "London", "Rome", "Berlin", "Belgrade", "Athens"]
+'''nodes = ["Reykjavik", "Oslo", "Moscow", "London", "Rome", "Berlin", "Belgrade", "Athens"]
 
 init_grafo = {}
 for node in nodes:
@@ -64,4 +108,16 @@ grafo = Grafo(nodes, init_grafo)
 node_inicial = 'Reykjavik'
 target_node = 'Belgrade'
 nodes_anteriores, menor_caminho = dijkstra_algorithm(grafo, node_inicial)
-print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node) 
+print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node) '''
+
+# Obter dados do banco de dados
+rows = fetch_data_from_db()
+# Construir o grafo a partir dos dados do banco de dados
+grafo = build_grafo_from_db_data(rows)
+
+# Definir os nós inicial e alvo
+node_inicial = 0 
+target_node = 9 
+
+nodes_anteriores, menor_caminho = dijkstra_algorithm(grafo, node_inicial)
+print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node)
