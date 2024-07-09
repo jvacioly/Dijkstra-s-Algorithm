@@ -1,16 +1,13 @@
-import sys, psycopg2
-import networkx as nx
-import matplotlib.pyplot as plt
+import pygame, psycopg2, sys
+import math, random
 from grafo import Grafo
 
-# Construindo o Grafo
 def fetch_data_from_db():
-    # Parâmetros de conexão ao banco de dados
     db_name = 'postgres'
     db_user = 'postgres'
     db_password = '1234'
     db_host = 'localhost'
-    db_port = '5432' 
+    db_port = '5432'
 
     try:
         connection = psycopg2.connect(
@@ -44,7 +41,6 @@ def build_grafo_from_db_data(rows):
     nodes = list(nodes)
     return Grafo(nodes, init_grafo)
 
-# Busca da melhor Rota
 def dijkstra_algorithm(grafo, node_inicial):
     nodes_nao_visitados = list(grafo.get_nodes())
     menor_caminho = {}
@@ -91,50 +87,65 @@ def print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node):
     print(' -> '.join(reversed(caminho)))
 
 def draw_grafo(grafo, visited_nodes, node_inicial, target_node):
-    G = nx.DiGraph()
+    # Inicializar o Pygame
+    pygame.init()
+
+    # Definir cores
+    BLACK = (0, 0, 0)
+    BLUE = (0, 0, 255)
+    LIGHT_GRAY = (200, 200, 200)
+    YELLOW = (255, 255, 0)
+
+    # Configurar a tela
+    screen = pygame.display.set_mode((1280, 960))
+    pygame.display.set_caption("Visualização do Grafo")
+    screen.fill(BLACK)
+
+    # Definir posições dos nós
+    pos = {}
     for node in grafo.get_nodes():
-        G.add_node(node)
+        pos[node] = (random.randint(50, 1230), random.randint(50, 910))
+
+    # Desenhar arestas
     for node in grafo.get_nodes():
         for neighbor in grafo.get_outgoing_edges(node):
-            G.add_edge(node, neighbor, weight=grafo.value(node, neighbor))
+            pygame.draw.line(screen, LIGHT_GRAY, pos[node], pos[neighbor], 1)
 
-    pos = nx.spring_layout(G, k=0.3, iterations=50)  # Ajustar a distância entre os nós
+    # Desenhar nós
+    for node in grafo.get_nodes():
+        color = BLUE
+        if node == node_inicial or node == target_node:
+            color = YELLOW
+        pygame.draw.circle(screen, color, pos[node], 5)
+    
+    pygame.display.flip()
 
-    nx.draw(G, pos, with_labels=True, node_color='black', font_size=8, node_size=50, font_color='white')
-    nx.draw_networkx_nodes(G, pos, nodelist=[node_inicial, target_node], node_color='yellow', node_size=300)
-    plt.show()
-
+    # Loop de atualização
+    clock = pygame.time.Clock()
     for node in visited_nodes:
-        nx.draw(G, pos, with_labels=True, node_color='black', font_size=8, node_size=50, font_color='white')
-        nx.draw_networkx_nodes(G, pos, nodelist=[node_inicial, target_node], node_color='yellow', node_size=300)
-        nx.draw_networkx_nodes(G, pos, nodelist=[node], node_color='blue', node_size=300)
-        plt.pause(0.5)
+        screen.fill(BLACK)
+        for node_inner in grafo.get_nodes():
+            for neighbor in grafo.get_outgoing_edges(node_inner):
+                pygame.draw.line(screen, LIGHT_GRAY, pos[node_inner], pos[neighbor], 1)
 
-    plt.show()
+        for node_inner in grafo.get_nodes():
+            color = BLUE
+            if node_inner == node_inicial or node_inner == target_node:
+                color = YELLOW
+            pygame.draw.circle(screen, color, pos[node_inner], 5)
 
+        pygame.draw.circle(screen, BLUE, pos[node], 5)
+        pygame.display.flip()
+        clock.tick(1)  # Atualiza a cada segundo
 
-# Definir o Grafo e chamar as funções:
-'''nodes = ["Reykjavik", "Oslo", "Moscow", "London", "Rome", "Berlin", "Belgrade", "Athens"]
+    # Espera até o usuário fechar a janela
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-init_grafo = {}
-for node in nodes:
-    init_grafo[node] = {}
-   
-init_grafo["Reykjavik"]["Oslo"] = 5
-init_grafo["Reykjavik"]["London"] = 4
-init_grafo["Oslo"]["Berlin"] = 1
-init_grafo["Oslo"]["Moscow"] = 3
-init_grafo["Moscow"]["Belgrade"] = 5
-init_grafo["Moscow"]["Athens"] = 4
-init_grafo["Athens"]["Belgrade"] = 1
-init_grafo["Rome"]["Berlin"] = 2
-init_grafo["Rome"]["Athens"] = 2
-
-grafo = Grafo(nodes, init_grafo)
-node_inicial = 'Reykjavik'
-target_node = 'Belgrade'
-nodes_anteriores, menor_caminho = dijkstra_algorithm(grafo, node_inicial)
-print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node) '''
+    pygame.quit()
 
 # Obter dados do banco de dados
 rows = fetch_data_from_db()
@@ -142,10 +153,13 @@ rows = fetch_data_from_db()
 grafo = build_grafo_from_db_data(rows)
 
 # Definir os nós inicial e alvo
-node_inicial = 0 
-target_node = 9 
+node_inicial = 0  # Altere conforme necessário
+target_node = 9  # Altere conforme necessário
 
+# Executar o algoritmo de Dijkstra
 nodes_anteriores, menor_caminho, visited_nodes = dijkstra_algorithm(grafo, node_inicial)
+# Imprimir o resultado
 print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node)
 
+# Visualizar o grafo
 draw_grafo(grafo, visited_nodes, node_inicial, target_node)

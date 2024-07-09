@@ -5,8 +5,8 @@ def create_or_alter_graph_table():
     db_name = 'postgres'
     db_user = 'postgres'
     db_password = '1234'
-    db_host = 'localhost'  # ou o endereço do seu servidor PostgreSQL
-    db_port = '5432'  # porta padrão do PostgreSQL
+    db_host = 'localhost' 
+    db_port = '5432'  
 
     # Conectando ao banco de dados
     try:
@@ -60,8 +60,13 @@ def create_or_alter_graph_table():
             connection.commit()
             print("Tabela criada com sucesso")
         
+        # Remover todos os dados da tabela antes de inserir novos dados
+        cursor.execute('DELETE FROM grafo')
+        connection.commit()
+        print("Todos os dados existentes foram removidos.")
+        
         # Inserção dos dados do arquivo na tabela
-        insert_data_from_file(cursor, connection, 'dados/bio-CE-LC.edges')
+        insert_data_from_file(cursor, connection, 'dados\\bio-CE-GT\\bio-CE-GT.edges') # CAMINHO DO ARQUIVO
         
     except (Exception, psycopg2.Error) as error:
         print("Erro ao conectar ou modificar a tabela no PostgreSQL", error)
@@ -79,19 +84,11 @@ def insert_data_from_file(cursor, connection, file_path):
             for line in file:
                 vertice1, vertice2, peso = map(float, line.split())
 
-                # Verificação se o dado já existe na tabela
-                check_data_query = '''
-                SELECT 1 FROM grafo WHERE vertice1 = %s AND vertice2 = %s AND peso = %s;
+                insert_query = '''
+                INSERT INTO grafo (vertice1, vertice2, peso)
+                VALUES (%s, %s, %s);
                 '''
-                cursor.execute(check_data_query, (int(vertice1), int(vertice2), peso))
-                data_exists = cursor.fetchone()
-
-                if not data_exists:
-                    insert_query = '''
-                    INSERT INTO grafo (vertice1, vertice2, peso)
-                    VALUES (%s, %s, %s);
-                    '''
-                    cursor.execute(insert_query, (int(vertice1), int(vertice2), peso))
+                cursor.execute(insert_query, (int(vertice1), int(vertice2), peso))
         connection.commit()
         print("Dados inseridos com sucesso")
     except (Exception, psycopg2.Error) as error:
