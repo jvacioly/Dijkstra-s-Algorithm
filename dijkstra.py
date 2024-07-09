@@ -1,16 +1,18 @@
-import sys, psycopg2
+import sys
+import psycopg2
 import networkx as nx
 import matplotlib.pyplot as plt
+import seaborn as sns
 from grafo import Grafo
+import matplotlib.animation as animation
 
-# Construindo o Grafo
+# Função para buscar dados do banco de dados
 def fetch_data_from_db():
-    # Parâmetros de conexão ao banco de dados
     db_name = 'postgres'
     db_user = 'postgres'
     db_password = '1234'
     db_host = 'localhost'
-    db_port = '5432' 
+    db_port = '5432'
 
     try:
         connection = psycopg2.connect(
@@ -31,6 +33,7 @@ def fetch_data_from_db():
             cursor.close()
             connection.close()
 
+# Função para construir o grafo a partir dos dados do banco de dados
 def build_grafo_from_db_data(rows):
     init_grafo = {}
     nodes = set()
@@ -44,7 +47,7 @@ def build_grafo_from_db_data(rows):
     nodes = list(nodes)
     return Grafo(nodes, init_grafo)
 
-# Busca da melhor Rota
+# Algoritmo de Dijkstra
 def dijkstra_algorithm(grafo, node_inicial):
     nodes_nao_visitados = list(grafo.get_nodes())
     menor_caminho = {}
@@ -76,6 +79,7 @@ def dijkstra_algorithm(grafo, node_inicial):
     
     return nodes_anteriores, menor_caminho, visited_nodes
 
+# Função para imprimir o resultado do algoritmo de Dijkstra
 def print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node):
     caminho = []
     node = target_node
@@ -85,67 +89,68 @@ def print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node):
         node = nodes_anteriores[node]
     
     caminho.append(node_inicial)
-    caminho = list(map(str, caminho))
+    caminho = list(map(int, reversed(caminho)))
 
     print(f'A menor distância para ir de {node_inicial} à {target_node} é: {menor_caminho[target_node]}.')
-    print(' -> '.join(reversed(caminho)))
+    print(' -> '.join(map(str, caminho)))
+    return caminho
 
-def draw_grafo(grafo, visited_nodes, node_inicial, target_node):
-    G = nx.DiGraph()
+# Função para desenhar o grafo utilizando Seaborn
+def draw_graph(grafo, caminho, node_inicial, target_node, visited_nodes):
+    G = nx.Graph()
     for node in grafo.get_nodes():
         G.add_node(node)
     for node in grafo.get_nodes():
         for neighbor in grafo.get_outgoing_edges(node):
             G.add_edge(node, neighbor, weight=grafo.value(node, neighbor))
 
-    pos = nx.spring_layout(G, k=0.3, iterations=50)  # Ajustar a distância entre os nós
+    fig, ax = plt.subplots(figsize=(16, 12))
+    pos = nx.spring_layout(G)
 
-    nx.draw(G, pos, with_labels=True, node_color='black', font_size=8, node_size=50, font_color='white')
-    nx.draw_networkx_nodes(G, pos, nodelist=[node_inicial, target_node], node_color='yellow', node_size=300)
+    def update(num):
+        ax.clear()
+        # Desenhando as arestas em preto
+        nx.draw_networkx_edges(G, pos, edge_color='black', width=0.5, ax=ax)
+
+        # Desenhando os nós
+        node_colors = ['green' if node == node_inicial or node == target_node else 'red' for node in G.nodes()]
+        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=100, ax=ax)
+
+        # Desenhando os nós visitados até agora em preto
+        if num < len(visited_nodes):
+            nx.draw_networkx_nodes(G, pos, nodelist=[node for node in visited_nodes[:num] if node != node_inicial], node_color='black', node_size=100, ax=ax)
+        else:
+            # Desenhando o caminho final em verde
+            step = num - len(visited_nodes)
+            if step > 0:
+                caminho_edges = [(caminho[i], caminho[i+1]) for i in range(step) if i < len(caminho) - 1]
+                nx.draw_networkx_edges(G, pos, edgelist=caminho_edges, edge_color='green', width=2, ax=ax)
+                nx.draw_networkx_nodes(G, pos, nodelist=caminho[:step], node_color='green', node_size=200, ax=ax)
+
+        # Desenhando os labels dos nós
+        nx.draw_networkx_labels(G, pos, font_size=8, font_color='white', ax=ax)
+
+        ax.set_title('Visualização do Grafo')
+        ax.axis('off')
+
+    ani = animation.FuncAnimation(fig, update, frames=len(visited_nodes) + len(caminho), interval=500, repeat=False)
     plt.show()
 
-    for node in visited_nodes:
-        nx.draw(G, pos, with_labels=True, node_color='black', font_size=8, node_size=50, font_color='white')
-        nx.draw_networkx_nodes(G, pos, nodelist=[node_inicial, target_node], node_color='yellow', node_size=300)
-        nx.draw_networkx_nodes(G, pos, nodelist=[node], node_color='blue', node_size=300)
-        plt.pause(0.5)
-
-    plt.show()
-
-
-# Definir o Grafo e chamar as funções:
-'''nodes = ["Reykjavik", "Oslo", "Moscow", "London", "Rome", "Berlin", "Belgrade", "Athens"]
-
-init_grafo = {}
-for node in nodes:
-    init_grafo[node] = {}
-   
-init_grafo["Reykjavik"]["Oslo"] = 5
-init_grafo["Reykjavik"]["London"] = 4
-init_grafo["Oslo"]["Berlin"] = 1
-init_grafo["Oslo"]["Moscow"] = 3
-init_grafo["Moscow"]["Belgrade"] = 5
-init_grafo["Moscow"]["Athens"] = 4
-init_grafo["Athens"]["Belgrade"] = 1
-init_grafo["Rome"]["Berlin"] = 2
-init_grafo["Rome"]["Athens"] = 2
-
-grafo = Grafo(nodes, init_grafo)
-node_inicial = 'Reykjavik'
-target_node = 'Belgrade'
-nodes_anteriores, menor_caminho = dijkstra_algorithm(grafo, node_inicial)
-print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node) '''
-
-# Obter dados do banco de dados
+# Carregar os dados do banco de dados
 rows = fetch_data_from_db()
-# Construir o grafo a partir dos dados do banco de dados
+
+# Construir o grafo
 grafo = build_grafo_from_db_data(rows)
 
-# Definir os nós inicial e alvo
-node_inicial = 0 
-target_node = 9 
+# Definir o nó inicial e o nó alvo
+node_inicial = 1
+target_node = 24  
 
+# Executar o algoritmo de Dijkstra
 nodes_anteriores, menor_caminho, visited_nodes = dijkstra_algorithm(grafo, node_inicial)
-print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node)
 
-draw_grafo(grafo, visited_nodes, node_inicial, target_node)
+# Imprimir o resultado e obter o caminho
+caminho = print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node)
+
+# Desenhar o grafo com a animação
+draw_graph(grafo, caminho, node_inicial, target_node, visited_nodes)

@@ -66,7 +66,7 @@ def create_or_alter_graph_table():
         print("Todos os dados existentes foram removidos.")
         
         # Inserção dos dados do arquivo na tabela
-        insert_data_from_file(cursor, connection, 'dados\\bio-CE-GT\\bio-CE-GT.edges') # CAMINHO DO ARQUIVO
+        insert_data_from_file(cursor, connection, 'dados\ca-sandi_auths\ca-sandi_auths.mtx') # CAMINHO DO ARQUIVO
         
     except (Exception, psycopg2.Error) as error:
         print("Erro ao conectar ou modificar a tabela no PostgreSQL", error)
