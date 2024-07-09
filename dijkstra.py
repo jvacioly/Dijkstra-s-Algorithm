@@ -133,7 +133,7 @@ def draw_graph(grafo, caminho, node_inicial, target_node, visited_nodes):
         ax.set_title('Visualização do Grafo')
         ax.axis('off')
 
-    ani = animation.FuncAnimation(fig, update, frames=len(visited_nodes) + len(caminho), interval=500, repeat=False)
+    ani = animation.FuncAnimation(fig, update, frames=len(visited_nodes) + len(caminho), interval=250, repeat=False)
     plt.show()
 
 # Carregar os dados do banco de dados
