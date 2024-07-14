@@ -14,3 +14,11 @@ select * from grafo g
 ~~~
 No VScode, rode o script load_data para carregar os dados na tabela do banco de dados. De volta ao DBeaver rode o script que criamos para visualizar a tabela.
 Agora já é possível rodar o código principal do dijkstra.
+
+## Como o Código Funciona?
+- grafo.py
+- load_data.py
+- dijkstra.py
+  - Algoritmo de Busca
+  - Representação Visual
+  
