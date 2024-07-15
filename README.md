@@ -1,5 +1,5 @@
 # Dijkstra-s-Algorithm
-Dijkstra's Algorithm, projeto da disciplina de Algoritmos e Estruturas de Dados 2024.1
+Este é um projeto da disciplina de Algoritmos e Estruturas de Dados 2024.1. O foco do projeto é construir um programa que crie e analise um grafo utilizando dados de um banco de dados PostgresSQL. A análise do grafo consiste em encontrar a melhor rota entre dois nós através do algoritmo de Dijkstra.
 
 ## Itens Necessários
 - WSL <https://medium.com/@habbema/desvendando-o-wsl-2-no-windows-11-c7649545026d>
@@ -16,9 +16,11 @@ No VScode, rode o script load_data para carregar os dados na tabela do banco de 
 Agora já é possível rodar o código principal do dijkstra.
 
 ## Como o Código Funciona?
-- grafo.py
-- load_data.py
-- dijkstra.py
+- Configuração do Ambiente
+> Utilizamos o Docker para hospedar o banco de dados PostgreSQL, o que facilita a implantação e a manutenção do sistema. Para visualizar e gerenciar o banco de dados, utilizamos a ferramenta DBeaver, que nos fornece uma interface amigável e poderosa.
+- Estrutura de Dados
+- Análise do Grafo
   - Algoritmo de Busca
   - Representação Visual
   
+###### Dijkstra's Algorithm, projeto da disciplina de Algoritmos e Estruturas de Dados 2024.1 CIn/UFPE
