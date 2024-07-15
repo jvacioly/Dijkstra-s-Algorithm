@@ -143,8 +143,8 @@ rows = fetch_data_from_db()
 grafo = build_grafo_from_db_data(rows)
 
 # Definir o nó inicial e o nó alvo
-node_inicial = 1
-target_node = 24  
+node_inicial = int(input('Node inicial:'))
+target_node = int(input('Qual o nó alvo? '))
 
 # Executar o algoritmo de Dijkstra
 nodes_anteriores, menor_caminho, visited_nodes = dijkstra_algorithm(grafo, node_inicial)
