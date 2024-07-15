@@ -2,7 +2,6 @@ import sys
 import psycopg2
 import networkx as nx
 import matplotlib.pyplot as plt
-import seaborn as sns
 from grafo import Grafo
 import matplotlib.animation as animation
 
@@ -95,7 +94,7 @@ def print_resultado(nodes_anteriores, menor_caminho, node_inicial, target_node):
     print(' -> '.join(map(str, caminho)))
     return caminho
 
-# Função para desenhar o grafo utilizando Seaborn
+# Função para desenhar o grafo
 def draw_graph(grafo, caminho, node_inicial, target_node, visited_nodes):
     G = nx.Graph()
     for node in grafo.get_nodes():
